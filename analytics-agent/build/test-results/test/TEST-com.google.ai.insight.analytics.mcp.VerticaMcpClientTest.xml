@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.google.ai.insight.analytics.mcp.VerticaMcpClientTest" tests="6" skipped="2" failures="0" errors="0" timestamp="2025-11-28T20:53:49.046Z" hostname="m-ytsyba-DK26" time="0.135">
+  <properties/>
+  <testcase name="testClientCreationWithDisabledConfig()" classname="com.google.ai.insight.analytics.mcp.VerticaMcpClientTest" time="0.123"/>
+  <testcase name="testExecuteQuery()" classname="com.google.ai.insight.analytics.mcp.VerticaMcpClientTest" time="0.0">
+    <skipped/>
+  </testcase>
+  <testcase name="testGetFeatureMetrics()" classname="com.google.ai.insight.analytics.mcp.VerticaMcpClientTest" time="0.0">
+    <skipped/>
+  </testcase>
+  <testcase name="testGetFeatureMetricsWhenDisabled()" classname="com.google.ai.insight.analytics.mcp.VerticaMcpClientTest" time="0.002"/>
+  <testcase name="testIsRunningWhenNotStarted()" classname="com.google.ai.insight.analytics.mcp.VerticaMcpClientTest" time="0.001"/>
+  <testcase name="testExecuteQueryWhenDisabled()" classname="com.google.ai.insight.analytics.mcp.VerticaMcpClientTest" time="0.001"/>
+  <system-out><![CDATA[22:53:49.160 [Test worker] INFO com.google.ai.insight.analytics.mcp.VerticaMcpClient -- Vertica MCP client is disabled
+22:53:49.177 [Test worker] INFO com.google.ai.insight.analytics.mcp.VerticaMcpClient -- Vertica MCP client is disabled
+22:53:49.178 [Test worker] INFO com.google.ai.insight.analytics.mcp.VerticaMcpClient -- Fetching metrics for feature: test-feature
+22:53:49.180 [Test worker] INFO com.google.ai.insight.analytics.mcp.VerticaMcpClient -- Vertica MCP client is disabled
+22:53:49.181 [Test worker] INFO com.google.ai.insight.analytics.mcp.VerticaMcpClient -- Vertica MCP client is disabled
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

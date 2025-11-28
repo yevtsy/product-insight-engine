@@ -1,0 +1,51 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: analytics-agent
+  datasource:
+    url: jdbc:mariadb://${DB_HOST:localhost}:${DB_PORT:3306}/analytics_db
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.mariadb.jdbc.Driver
+
+google:
+  ai:
+    project-id: ${GOOGLE_CLOUD_PROJECT}
+    location: us-central1
+    api-key: ${GOOGLE_API_KEY}
+
+agent:
+  name: internal-analytics-agent
+
+# MCP (Model Context Protocol) Server Configuration
+mcp:
+  datahub:
+    enabled: ${MCP_DATAHUB_ENABLED:true}
+    command: ${MCP_DATAHUB_COMMAND:npx}
+    server-package: ${MCP_DATAHUB_PACKAGE:@acryldata/mcp-server-datahub}
+    gms-url: ${DATAHUB_GMS_URL:http://localhost:8080}
+    token: ${DATAHUB_TOKEN:}
+    timeout: ${MCP_DATAHUB_TIMEOUT:30000}
+    max-retries: ${MCP_DATAHUB_MAX_RETRIES:3}
+
+  vertica:
+    enabled: ${MCP_VERTICA_ENABLED:true}
+    command: ${MCP_VERTICA_COMMAND:npx}
+    server-package: ${MCP_VERTICA_PACKAGE:mcp-vertica}
+    host: ${VERTICA_HOST:localhost}
+    port: ${VERTICA_PORT:5433}
+    database: ${VERTICA_DATABASE:analytics_db}
+    username: ${VERTICA_USERNAME:dbadmin}
+    password: ${VERTICA_PASSWORD:}
+    timeout: ${MCP_VERTICA_TIMEOUT:30000}
+    max-retries: ${MCP_VERTICA_MAX_RETRIES:3}
+
+# Metrics configuration
+management:
+  metrics:
+    enable:
+      mcp: true
+    tags:
+      application: ${spring.application.name}

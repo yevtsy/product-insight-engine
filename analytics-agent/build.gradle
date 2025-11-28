@@ -1,0 +1,31 @@
+plugins {
+    id 'org.springframework.boot'
+}
+
+dependencies {
+    implementation project(':shared')
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.mariadb.jdbc:mariadb-java-client'
+
+    // Google ADK and AI dependencies
+    implementation 'com.google.adk:google-adk:0.3.0'
+    implementation 'com.google.adk:google-adk-dev:0.3.0'
+    implementation 'com.google.cloud:google-cloud-vertexai:0.1.0'
+
+    // MCP (Model Context Protocol) client for communication with MCP servers
+    // Using WebClient for HTTP/SSE communication with stdio-based MCP servers
+    implementation 'io.projectreactor:reactor-core'
+
+    // Metrics and monitoring
+    implementation 'io.micrometer:micrometer-core'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:mariadb'
+    testImplementation 'org.mockito:mockito-core'
+}

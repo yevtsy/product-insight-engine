@@ -1,0 +1,75 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: aggregator-agent
+  datasource:
+    url: jdbc:mariadb://${DB_HOST:localhost}:${DB_PORT:3306}/aggregator_db
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.mariadb.jdbc.Driver
+
+google:
+  ai:
+    project-id: ${GOOGLE_CLOUD_PROJECT}
+    location: us-central1
+    api-key: ${GOOGLE_API_KEY}
+
+agent:
+  name: aggregator-agent
+  analytics-agent-url: http://localhost:8081/agent-to-agent
+
+facebook:
+  page-id: ${FACEBOOK_PAGE_ID}
+  access-token: ${FACEBOOK_ACCESS_TOKEN}
+  api-version: v18.0
+  graph-api-url: https://graph.facebook.com
+  max-comments: ${FACEBOOK_MAX_COMMENTS:1000}
+  default-keywords: ${FACEBOOK_DEFAULT_KEYWORDS:}
+
+instagram:
+  user-id: ${INSTAGRAM_USER_ID}
+  access-token: ${INSTAGRAM_ACCESS_TOKEN}
+  api-version: v18.0
+  graph-api-url: https://graph.instagram.com
+  max-comments: ${INSTAGRAM_MAX_COMMENTS:1000}
+  default-keywords: ${INSTAGRAM_DEFAULT_KEYWORDS:}
+
+reddit:
+  client-id: ${REDDIT_CLIENT_ID}
+  client-secret: ${REDDIT_CLIENT_SECRET}
+  username: ${REDDIT_USERNAME}
+  password: ${REDDIT_PASSWORD}
+  user-agent: ${REDDIT_USER_AGENT:ProductInsightEngine/1.0}
+  api-url: https://oauth.reddit.com
+  thread-url: ${REDDIT_THREAD_URL:}
+  max-comments: ${REDDIT_MAX_COMMENTS:1000}
+  default-keywords: ${REDDIT_DEFAULT_KEYWORDS:}
+
+# Thread pool configuration for LLM agents
+agent-executor:
+  core-pool-size: ${AGENT_EXECUTOR_CORE_POOL_SIZE:3}
+  max-pool-size: ${AGENT_EXECUTOR_MAX_POOL_SIZE:10}
+  queue-capacity: ${AGENT_EXECUTOR_QUEUE_CAPACITY:50}
+  thread-name-prefix: "llm-agent-"
+
+# Rate limiting configuration
+rate-limit:
+  facebook:
+    requests-per-minute: ${FACEBOOK_RATE_LIMIT_RPM:200}
+    burst-capacity: ${FACEBOOK_RATE_LIMIT_BURST:10}
+  instagram:
+    requests-per-minute: ${INSTAGRAM_RATE_LIMIT_RPM:200}
+    burst-capacity: ${INSTAGRAM_RATE_LIMIT_BURST:10}
+  reddit:
+    requests-per-minute: ${REDDIT_RATE_LIMIT_RPM:60}
+    burst-capacity: ${REDDIT_RATE_LIMIT_BURST:5}
+  gemini:
+    requests-per-minute: ${GEMINI_RATE_LIMIT_RPM:60}
+    burst-capacity: ${GEMINI_RATE_LIMIT_BURST:10}
+
+# REST client configuration
+rest-client:
+  connect-timeout-seconds: ${REST_CLIENT_CONNECT_TIMEOUT:10}
+  read-timeout-seconds: ${REST_CLIENT_READ_TIMEOUT:30}

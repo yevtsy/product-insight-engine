@@ -1,0 +1,23 @@
+# CLI-specific configuration
+spring:
+  main:
+    banner-mode: console
+  shell:
+    interactive:
+      enabled: true
+    command:
+      version:
+        enabled: true
+
+# Disable web server for CLI mode (optional)
+# To use CLI mode only, run with: --spring.profiles.active=cli --spring.main.web-application-type=none
+server:
+  port: 8080
+
+# Logging configuration for CLI
+logging:
+  level:
+    com.google.ai.insight: INFO
+    org.springframework.shell: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

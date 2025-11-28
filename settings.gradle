@@ -1,0 +1,5 @@
+rootProject.name = 'product-insight-engine'
+
+include 'shared'
+include 'analytics-agent'
+include 'aggregator-agent'
