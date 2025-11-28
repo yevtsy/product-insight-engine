@@ -1,0 +1,201 @@
+@startuml Product Insight Engine - Component Diagram
+!define RECTANGLE_STYLE <style>rectangle { BackgroundColor #E3F2FD; BorderColor #1976D2; FontColor #000000 }</style>
+!define AGENT_STYLE <style>agent { BackgroundColor #FFF3E0; BorderColor #F57C00; FontColor #000000 }</style>
+!define DATABASE_STYLE <style>database { BackgroundColor #E8F5E9; BorderColor #388E3C; FontColor #000000 }</style>
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+
+' External Systems
+package "External Data Sources" {
+    [Facebook Graph API\nv18.0] as Facebook #FFE082
+    [Instagram Graph API\nv18.0] as Instagram #FFE082
+    [Reddit OAuth2 API] as Reddit #FFE082
+    database "Vertica Analytics DB" as Vertica #C8E6C9
+    database "DataHub Catalog" as DataHub #C8E6C9
+}
+
+' Aggregator Agent Microservice
+package "Aggregator Agent\n(Spring Boot - Port 8080)" {
+
+    ' REST API Layer
+    rectangle "REST API Layer" {
+        [AggregatorController] as Controller #BBDEFB
+    }
+
+    ' Orchestration Layer
+    rectangle "Orchestration Layer" {
+        [AggregatorService\n(Fan-Out/Fan-In\nOrchestrator)] as Orchestrator #90CAF9
+
+        [Thread Pool\nExecutor] as ThreadPool #64B5F6
+
+        [Health Score\nCalculator] as HealthCalc #42A5F5
+
+        [Recommendation\nEngine] as RecoEngine #42A5F5
+    }
+
+    ' LLM Agents Layer
+    rectangle "Google ADK LLM Agents\n(Gemini 2.5 Flash)" {
+        agent "FacebookScout\nLlmAgent" as FBAgent #FFE0B2
+        agent "InstagramScout\nLlmAgent" as IGAgent #FFE0B2
+        agent "RedditScout\nLlmAgent" as RedditAgent #FFE0B2
+    }
+
+    ' Tools Layer
+    rectangle "Scout Tools\n(Data Fetchers)" {
+        [FacebookScoutTool\n+ Rate Limiter\n(Bucket4j)] as FBTool #FFF9C4
+        [InstagramScoutTool\n+ Rate Limiter\n(Bucket4j)] as IGTool #FFF9C4
+        [RedditScoutTool\n+ OAuth2 Manager\n+ Rate Limiter] as RedditTool #FFF9C4
+    }
+
+    ' HTTP Client
+    rectangle "HTTP Client Layer" {
+        [RestTemplate\n(Analytics Client)] as RestClient #B3E5FC
+    }
+}
+
+' Analytics Agent Microservice
+package "Analytics Agent\n(Spring Boot - Port 8081)" {
+
+    rectangle "A2A Communication" {
+        [AgentToAgentController\n(A2A Protocol)] as A2AController #BBDEFB
+    }
+
+    rectangle "Analytics Intelligence" {
+        agent "AnalyticsLlmAgent\n(Google ADK)" as AnalyticsAgent #FFE0B2
+
+        [VerticaTool\n(Function Tool)] as VerticaTool #FFF9C4
+    }
+
+    rectangle "MCP Client Layer" {
+        [VerticaMcpClient\n(JSON-RPC 2.0\nstdin/stdout)] as McpClient #B2DFDB
+
+        [DataHubMcpClient\n(Optional)] as DataHubClient #B2DFDB
+    }
+}
+
+' External MCP Servers
+package "External MCP Servers\n(Node.js Processes)" {
+    [nolleh/mcp-vertica\nMCP Server] as McpServer #80CBC4
+    [DataHub MCP\nServer] as DataHubMcpServer #80CBC4
+}
+
+' User Interaction
+actor "Product Manager\n/ API Client" as User #FFB74D
+
+' Data Flow - User to Controller
+User -down-> Controller : HTTP GET /analyze\n(featureId, keywords)
+
+' Data Flow - Controller to Orchestrator
+Controller -down-> Orchestrator : analyzeFeature()
+
+' Data Flow - Orchestrator to Agents (Fan-Out)
+Orchestrator -down-> ThreadPool : Submit 4 tasks\n(parallel execution)
+
+ThreadPool -down-> FBAgent : CompletableFuture\nanalyzeFeedback()
+ThreadPool -down-> IGAgent : CompletableFuture\nanalyzeFeedback()
+ThreadPool -down-> RedditAgent : CompletableFuture\nanalyzeFeedback()
+ThreadPool -down-> RestClient : CompletableFuture\nA2A call
+
+' Data Flow - Agents to Tools
+FBAgent -down-> FBTool : fetchComments()\n(FunctionTool)
+IGAgent -down-> IGTool : fetchComments()\n(FunctionTool)
+RedditAgent -down-> RedditTool : fetchComments()\n(FunctionTool)
+
+' Data Flow - Tools to External APIs
+FBTool -down-> Facebook : HTTP + OAuth\n(Rate Limited)
+IGTool -down-> Instagram : HTTP + OAuth\n(Rate Limited)
+RedditTool -down-> Reddit : OAuth2 Flow\n(Rate Limited)
+
+' Data Flow - RestClient to Analytics Agent
+RestClient -right-> A2AController : HTTP POST\nAgent-to-Agent\n(GET_METRICS)
+
+' Data Flow - Analytics Agent Internal
+A2AController -down-> AnalyticsAgent : getMetrics()\nanalyzeMetrics()
+AnalyticsAgent -down-> VerticaTool : execute()\n(FunctionTool)
+VerticaTool -down-> McpClient : executeQuery()\n(JSON-RPC)
+
+' Data Flow - MCP Client to Server
+McpClient -down-> McpServer : stdin/stdout\nJSON-RPC 2.0
+McpServer -right-> Vertica : SQL Queries
+
+' Optional DataHub Integration
+VerticaTool -down-> DataHubClient : getMetadata()
+DataHubClient -down-> DataHubMcpServer : JSON-RPC 2.0
+DataHubMcpServer -right-> DataHub : GraphQL
+
+' Data Flow - Fan-In and Response
+Orchestrator -down-> HealthCalc : calculateHealthScore()\n(metrics + sentiment)
+Orchestrator -down-> RecoEngine : generateRecommendations()\n(patterns analysis)
+
+Orchestrator -up-> Controller : FeatureInsight\n(health score 0-1.0,\nsentiment, metrics,\nrecommendations)
+
+Controller -up-> User : JSON Response
+
+' Legend
+legend right
+    **Architecture Patterns**
+    |= Pattern |= Implementation |
+    | Fan-Out/Fan-In | CompletableFuture parallel execution |
+    | Agent-to-Agent (A2A) | HTTP-based microservice communication |
+    | Model Context Protocol | JSON-RPC 2.0 stdio process communication |
+    | Tool-Agent Separation | Data fetching vs. Intelligence analysis |
+
+    **Key Technologies**
+    - Google Agent Development Kit (ADK)
+    - Gemini 2.5 Flash LLM
+    - Spring Boot Microservices
+    - Bucket4j Rate Limiting
+    - Model Context Protocol (MCP)
+
+    **Parallel Execution**
+    4 agents execute simultaneously:
+    - Facebook Scout Agent
+    - Instagram Scout Agent
+    - Reddit Scout Agent
+    - Analytics Agent (remote)
+
+    Total time = slowest agent
+endlegend
+
+note top of Orchestrator
+    **Orchestration Strategy**
+    1. Receive feature analysis request
+    2. Fan-Out: Launch 4 agents in parallel
+    3. Fan-In: Wait for all completions
+    4. Calculate health score (0-1.0)
+    5. Generate recommendations
+    6. Return unified FeatureInsight
+end note
+
+note top of FBAgent
+    **LLM Agent Intelligence**
+    - Sentiment analysis
+    - Theme identification
+    - Positive/negative highlights
+    - Structured output format
+    Uses Gemini 2.5 Flash
+end note
+
+note top of FBTool
+    **Tool Responsibilities**
+    - API authentication
+    - Keyword filtering
+    - Pagination handling
+    - Rate limiting enforcement
+    - Raw data retrieval only
+    (No analysis/intelligence)
+end note
+
+note top of McpClient
+    **MCP Protocol Benefits**
+    - No database drivers needed
+    - Process isolation
+    - Language-agnostic
+    - Retry logic with backoff
+    - Automatic reconnection
+    - Fallback to mock data
+end note
+
+@enduml
